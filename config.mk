@@ -7,5 +7,5 @@ DEST = /usr/local
 X11INC = /usr/local/include
 X11LIB = /usr/local/lib
 
-CFLAGS   = -Wall -Wextra -O3 -march=native
+CFLAGS   = -Wall -Wextra -Os -march=native
 BIN      = vsfls

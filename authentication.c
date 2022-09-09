@@ -13,6 +13,8 @@ Authentication_status signUP(char *, char *);
 Authentication_status authentication(char *password);
 static Authentication_status sanitizeUser(char *);
 static Authentication_status sanitizePassword(char *);
+static Authentication_status saveNewUserAndPassword(FILE *,char *, char *);
+static int countLinesShadowFile(FILE *);
 
 /************************/
 /* FUNCTION DEFINITIONS */
@@ -22,10 +24,19 @@ Authentication_status
 signUp(char *user, char *password)
 {
 	Authentication_status status;
+	FILE *login_file;
+
+	login_file = fopen(LOGIN_FILE, "rw");
 
 	status = sanitizeUser(user);
 	status = sanitizePassword(password);
+	if (countLinesShadowFile(login_file) < 5)
+		status = saveNewUserAndPassword(login_file, user, password);
+	else
+		return AU_MAX_USERS_REACHED;
 	
+	fclose(login_file);
+
 	return status;
 }
 
@@ -84,7 +95,7 @@ sanitizePassword(char *password)
 		return AU_ERROR;
 	
 	/* execute regular expression */
-	if (!regexec(&regex_specialchar, password, 0, NULL, 0))
+	if (regexec(&regex_specialchar, password, 0, NULL, 0))
 		return AU_SIGN_UP_ERROR;
 	if (regexec(&regex_capital, password, 0, NULL, 0))
 		return AU_SIGN_UP_ERROR;
@@ -95,4 +106,30 @@ sanitizePassword(char *password)
 
 	/* sign up with success */
 	return AU_SIGN_UP_OK;
+}
+
+static Authentication_status
+saveNewUserAndPassword(FILE *login_file, char *user, char *password)
+{
+
+	login_file = fopen("shadow", "a");
+	if (!login_file)
+		return AU_ERROR;	
+
+	fprintf(login_file, "%s:%s\n", user, password);
+
+	return AU_SIGN_UP_OK;
+}
+
+static int
+countLinesShadowFile(FILE *login_file)
+{
+	int lines;
+	char c;
+
+	for (c = getc(login_file); c != EOF; c = getc(login_file))
+		if (c == '\n')
+			lines++;
+
+	return lines;
 }
