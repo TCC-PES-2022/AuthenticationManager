@@ -4,8 +4,21 @@
 /* Module interfaces */
 #include "iauthentication.h"
 
+void tests(void);
+
 int
 main(int argc, char **argv)
+{
+	tests();
+	return EXIT_SUCCESS;
+}
+
+/**********/
+/* TESTES */
+/**********/
+
+void
+tests(void)
 {
 	char user[MAX_LEN_USER];
 	char password[MAX_LEN_PW];
@@ -19,6 +32,5 @@ main(int argc, char **argv)
 	/* just for testing */
 	/* ---------------- */
 
-	printf("%d\n", signUp(user, password));
-	return EXIT_SUCCESS;
+	printf("%d\n", signIn(user, password));
 }
