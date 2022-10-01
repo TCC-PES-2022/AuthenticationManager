@@ -21,6 +21,6 @@ typedef enum authentication_system {
 
 /* visible functions */
 Authentication_status signUp(char *, char *);
-Authentication_status signIn(char *, char *);
+Authentication_status login(char *, char *);
 
 #endif

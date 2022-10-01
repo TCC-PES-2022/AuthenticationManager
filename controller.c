@@ -4,12 +4,27 @@
 /* Module interfaces */
 #include "iauthentication.h"
 
-void tests(void);
+typedef enum controller_states {
+	CO_ERROR = 9
+} Controller_states;
+
+void tests(int);
 
 int
 main(int argc, char **argv)
 {
-	tests();
+	/* authentication system */
+	//while (1) {
+	//	switch (state) {
+	//		case CO_ERROR:
+	//			/* TODO - logar mensagem de erro */
+	//			exit(EXIT_FAILURE);
+	//			break;
+	//		default:
+	//			break;
+	//	}
+	//}
+	tests(argc);
 	return EXIT_SUCCESS;
 }
 
@@ -18,7 +33,7 @@ main(int argc, char **argv)
 /**********/
 
 void
-tests(void)
+tests(int argc)
 {
 	char user[MAX_LEN_USER];
 	char password[MAX_LEN_PW];
@@ -32,5 +47,8 @@ tests(void)
 	/* just for testing */
 	/* ---------------- */
 
-	printf("%d\n", signIn(user, password));
+	if (argc == 2)
+		printf("%d\n", signUp(user, password));
+	else
+		printf("%d\n", login(user, password));
 }
