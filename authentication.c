@@ -1,9 +1,5 @@
-#include <stdio.h>
-#include <string.h>
-#include <regex.h>
-
-/* interfaces */
 #include "iauthentication.h"
+#include "sha256.h"
 
 /*************************/
 /* FUNCTION DECLARATIONS */
@@ -31,10 +27,10 @@ signUp(char *user, char *password)
 
 	status = sanitizeUser(user);
 	status = sanitizePassword(password);
-	if (countMaxUsers < 11 && status == AU_SIGN_UP_OK)
-		status = saveNewUserAndPassword(login_file, user, password);
-	else
+	printf("%d\n", status);
+	if (countMaxUsers(login_file) > 11)
 		return AU_MAX_USERS_REACHED;
+	status = saveNewUserAndPassword(login_file, user, password);
 	
 	fclose(login_file);
 
@@ -66,7 +62,7 @@ sanitizeUser(char *user)
 		return AU_SIGN_UP_ERROR;
 
 	/* compile regex */
-	if (regcomp(&regex, "[A-Z]", REG_EXTENDED))
+	if (regcomp(&regex, ".*[A-Z].*", REG_EXTENDED))
 		return AU_ERROR;
 
 	/* execute regular expression */
@@ -90,7 +86,7 @@ sanitizePassword(char *password)
 		return AU_SIGN_UP_ERROR;
 
 	/* compile regular expression */
-	if (regcomp(&regex, "[A-Z]", REG_EXTENDED))
+	if (regcomp(&regex, ".*[A-Z].*", REG_EXTENDED))
 		return AU_ERROR;
 	
 	/* execute regular expression */
@@ -107,11 +103,25 @@ sanitizePassword(char *password)
 static Authentication_status
 saveNewUserAndPassword(FILE *login_file, char *user, char *password)
 {
+	int i;
+	unsigned char buf[SHA256_BLOCK_SIZE];
+	sha256_ctx ctx;
+
 	login_file = fopen("shadow", "a");
 	if (!login_file)
 		return AU_ERROR;	
 
-	fprintf(login_file, "%s:%s:", user, password);
+	/* convert char to uint8_t */
+	unsigned char var[] = {"abc"};
+
+	/* encode with sha256 */
+	sha256_init(&ctx);
+	sha256_update(&ctx, var, strlen(var));
+	sha256_final(&ctx, buf);
+	for (i = 0; i < SHA256_BLOCK_SIZE; i++)
+		printf("%x", buf[i]);
+
+	fprintf(login_file, "%s:%s:", user, buf);
 
 	return AU_SIGN_UP_OK;
 }

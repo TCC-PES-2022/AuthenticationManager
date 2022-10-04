@@ -3,27 +3,47 @@
 
 /* Module interfaces */
 #include "iauthentication.h"
-
-typedef enum controller_states {
-	CO_ERROR = 9
-} Controller_states;
+#include "UI.h"
 
 void tests(int);
 
 int
 main(int argc, char **argv)
 {
+	enum UI_INTERFACE state;
 	/* authentication system */
-	//while (1) {
-	//	switch (state) {
-	//		case CO_ERROR:
-	//			/* TODO - logar mensagem de erro */
-	//			exit(EXIT_FAILURE);
-	//			break;
-	//		default:
-	//			break;
-	//	}
-	//}
+	while (1) {
+		switch (state) {
+			case UI_Falha:
+				/* TODO - logar mensagem de erro */
+				break;
+			case UI_Ok:
+				break;
+			case UI_Timeout:
+				break;
+			case UI_Aguardar:
+				break;
+			case UI_Null:
+				break;
+			case UI_Iniciar_Transferencia:
+				break;
+			case UI_Andamento_Transferencia:
+				break;
+			case UI_Cancelar:
+				break;
+			case UI_Fim_Transferencia:
+				break;
+			case UI_Carregar_Imagem:
+				break;
+			case UI_Informacoes_Imagem:
+				break;
+			case UI_EnviarLogin:
+				break;
+			default:
+				break;
+		}
+		break;
+	}
 	tests(argc);
 	return EXIT_SUCCESS;
 }

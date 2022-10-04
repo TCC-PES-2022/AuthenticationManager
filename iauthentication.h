@@ -1,6 +1,10 @@
 #ifndef IAUTHENTICATION_H
 #define IAUTHENTICATION_H
 
+#include <stdio.h>
+#include <string.h>
+#include <regex.h>
+
 #define MIN_LEN_USER 8
 #define MAX_LEN_USER 16
 #define MIN_LEN_PW   8
