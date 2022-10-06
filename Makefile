@@ -2,16 +2,15 @@ include config.mk
 
 REQ = controller
 
-COM = authentication\
-      sha256
+COM = authentication
 
 default: $(BIN)
 
 .c.o:
-	g++ $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(BIN): $(REQ:=.o) $(COM:=.o)
-	g++ $(LDFLAGS) $(LDLIBS) $(REQ:=.o) $(COM:=.o) -o $@
+	cc $(LDFLAGS) $(LDLIBS) $(REQ:=.o) $(COM:=.o) -o $@
 
 install: $(BIN)
 	mkdir -p $(DEST)/bin

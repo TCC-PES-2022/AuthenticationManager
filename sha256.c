@@ -1,4 +1,5 @@
 #include "sha256.h"
+#include <stdio.h>
 
 const uint32_t hashStart[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 			       0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
@@ -81,7 +82,7 @@ ch(uint32_t x, uint32_t y, uint32_t z)
 }
 
 static void
-sha256_transform(sha256_ctx *ctx, const uint8_t *data)
+sha256_transform(sha256_ctx *ctx, const uint8_t data[])
 {
 	uint32_t a, b, c, d, e, f, g, h, i, j, t1, t2, m[64];
 
@@ -90,7 +91,7 @@ sha256_transform(sha256_ctx *ctx, const uint8_t *data)
 		(data[j + 2] << 8) | (data[j + 3]);
 	}
 	for (; i < 64; i++) {
-		m[1] = sigma1(m[i - 2]) + m[i - 7] + sigma0(m[i - 15]) + 
+		m[i] = sigma1(m[i - 2]) + m[i - 7] + sigma0(m[i - 15]) + 
 		m[i - 16];
 	}
 
@@ -128,7 +129,7 @@ sha256_transform(sha256_ctx *ctx, const uint8_t *data)
 	return;
 }
 
-void
+static void
 sha256_init(sha256_ctx *ctx)
 {
 	int i;
@@ -141,8 +142,8 @@ sha256_init(sha256_ctx *ctx)
 	return;
 }
 
-void
-sha256_update(sha256_ctx *ctx, const uint8_t *data, size_t len)
+static void
+sha256_update(sha256_ctx *ctx, const uint8_t data[], size_t len)
 {
 	uint8_t i;
 
@@ -155,10 +156,12 @@ sha256_update(sha256_ctx *ctx, const uint8_t *data, size_t len)
 			ctx->datalen = 0;
 		}
 	}
+
+	return;
 }
 
-void
-sha256_final(sha256_ctx *ctx, uint8_t *hash)
+static void
+sha256_final(sha256_ctx *ctx, uint8_t hash[])
 {
 	uint8_t i;
 
@@ -198,4 +201,45 @@ sha256_final(sha256_ctx *ctx, uint8_t *hash)
 		hash[i + 24] = (ctx->state[6] >> (24 - i * 8)) & 0x000000ff;
 		hash[i + 28] = (ctx->state[7] >> (24 - i * 8)) & 0x000000ff;
 	}
+	
+	return;
+}
+
+static void
+sha256_processing(const uint8_t data[], size_t len, uint8_t hash[])
+{
+	sha256_ctx ctx;
+
+	sha256_init(&ctx);
+	sha256_update(&ctx, data, len);
+	sha256_final(&ctx, hash);
+
+	return;
+}
+
+static void
+convert(char *result_hash, uint8_t hash[])
+{
+	int i;
+	char shash[4];
+
+	sprintf(shash, "%x", hash[0]);
+	strncpy(result_hash, shash, 2);
+	for (i = 1; i < SHA256_BLOCK_SIZE; i++) {
+		sprintf(shash, "%x", hash[i]);
+		strncat(result_hash, shash, 2);
+	}
+
+	return;
+}
+
+void
+sha256(const uint8_t *input, char *output)
+{
+	uint8_t hash[SHA256_BLOCK_SIZE*2];
+
+	sha256_processing(input, sizeof(input), hash); 
+	convert(output, hash);
+
+	return;
 }

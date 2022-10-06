@@ -1,39 +1,48 @@
 #include "iauthentication.h"
-#include "sha256.h"
 
 /*************************/
 /* FUNCTION DECLARATIONS */
 /*************************/
 
-Authentication_status signUp(char *, char *);
+Authentication_status sign_up(char *, char *);
 Authentication_status login(char *, char *);
+Authentication_status remove_user(char *);
+static int check_file(void);
+static void create_file(void);
 static Authentication_status sanitizeUser(char *);
 static Authentication_status sanitizePassword(char *);
-static Authentication_status saveNewUserAndPassword(FILE *,char *, char *);
-static Authentication_status checkLogin(FILE *, char *, char *);
-static int countMaxUsers(FILE *);
+static Authentication_status saveNewUserAndPassword(char *, char *);
+static Authentication_status checkLogin(char *, char *);
+static int countMaxUsers(void);
 
 /********************/
 /* PUBLIC FUNCTIONS */
 /********************/
 
 Authentication_status
-signUp(char *user, char *password)
+sign_up(char *user, char *password)
 {
 	Authentication_status status;
-	FILE *login_file;
 
-	login_file = fopen(LOGIN_FILE, "rw");
+	/* check if file exist */
+	if (!check_file())
+		create_file();
 
+	/* sanitize user and password */
 	status = sanitizeUser(user);
+	if (status != AU_SIGN_UP_OK)
+		return status;
 	status = sanitizePassword(password);
-	printf("%d\n", status);
-	if (countMaxUsers(login_file) > 11)
-		return AU_MAX_USERS_REACHED;
-	status = saveNewUserAndPassword(login_file, user, password);
-	
-	fclose(login_file);
+	if (status != AU_SIGN_UP_OK)
+		return status;
 
+	if (countMaxUsers() > 11)
+		return AU_MAX_USERS_REACHED;
+	if (status == AU_SIGN_UP_ERROR)
+		return AU_SIGN_UP_ERROR;
+
+	status = saveNewUserAndPassword(user, password);
+	
 	return status;
 }
 
@@ -41,28 +50,85 @@ Authentication_status
 login(char *user, char *password)
 {
 	Authentication_status status;
-	FILE *login_file;
 
-	login_file = fopen(LOGIN_FILE, "r");
-
+	/* sanitize user and password */
 	status = sanitizeUser(user);
+	if (status != AU_SIGN_UP_OK)
+		return status;
 	status = sanitizePassword(password);
-	status = checkLogin(login_file, user, password);
+	if (status != AU_SIGN_UP_OK)
+		return status;
+
+	status = checkLogin(user, password);
 
 	return status;
 }
+
+Authentication_status
+remove_user(char *user)
+{
+	FILE *login_file;
+	char *find_user;
+	char buffer[1024];
+
+	login_file = fopen(LOGIN_FILE, "rw");
+
+	if (!fgets(buffer, sizeof(buffer), login_file))
+		return AU_ERROR;
+	
+	find_user = strstr(buffer, user);
+	if (!find_user)
+		return AU_REMOVE_USER_ERROR;
+
+	buffer[strlen(buffer) - strlen(find_user)] = '\0';
+	find_user = find_user + strlen(user);
+	strcat(buffer, find_user);
+
+	fputs(buffer, login_file);
+
+	fclose(login_file);
+
+	return AU_REMOVE_USER_OK;
+}
+
+/*******************/
+/* LOCAL FUNCTIONS */
+/*******************/
+
+/********************************* Permission ********************************/
+
+static int
+check_file(void)
+{
+	struct stat st;
+	if (!stat(LOGIN_FILE, &st))
+		return 1;
+	else
+		return 0;
+}
+
+static void
+create_file(void)
+{
+	system("touch shadow");
+	return;
+}
+
+/********************************* Sanitize **********************************/
 
 static Authentication_status
 sanitizeUser(char *user)
 {
 	regex_t regex;
 
+	char *regex_string = ".*[A-Z].*";
+
 	/* test length of user and password */
 	if (strlen(user) < MIN_LEN_USER || strlen(user) > MAX_LEN_USER)
 		return AU_SIGN_UP_ERROR;
 
 	/* compile regex */
-	if (regcomp(&regex, ".*[A-Z].*", REG_EXTENDED))
+	if (regcomp(&regex, regex_string, REG_EXTENDED))
 		return AU_ERROR;
 
 	/* execute regular expression */
@@ -81,12 +147,14 @@ sanitizePassword(char *password)
 {
 	regex_t regex;
 
+	char *regex_string = ".*[!@#$%&*].*";
+
 	/* test length of user and password */
 	if (strlen(password) < MIN_LEN_PW || strlen(password) > MAX_LEN_PW)
 		return AU_SIGN_UP_ERROR;
 
 	/* compile regular expression */
-	if (regcomp(&regex, ".*[A-Z].*", REG_EXTENDED))
+	if (regcomp(&regex, regex_string, REG_EXTENDED))
 		return AU_ERROR;
 	
 	/* execute regular expression */
@@ -100,37 +168,33 @@ sanitizePassword(char *password)
 	return AU_SIGN_UP_OK;
 }
 
-static Authentication_status
-saveNewUserAndPassword(FILE *login_file, char *user, char *password)
-{
-	int i;
-	unsigned char buf[SHA256_BLOCK_SIZE];
-	sha256_ctx ctx;
+/************************* Save data or check data ****************************/
 
-	login_file = fopen("shadow", "a");
+static Authentication_status
+saveNewUserAndPassword(char *user, char *password)
+{
+	FILE *login_file;
+
+	login_file = fopen(LOGIN_FILE, "ab+");
+
 	if (!login_file)
 		return AU_ERROR;	
 
-	/* convert char to uint8_t */
-	unsigned char var[] = {"abc"};
+	fprintf(login_file, "%s:%s:", user, password);
 
-	/* encode with sha256 */
-	sha256_init(&ctx);
-	sha256_update(&ctx, var, strlen(var));
-	sha256_final(&ctx, buf);
-	for (i = 0; i < SHA256_BLOCK_SIZE; i++)
-		printf("%x", buf[i]);
-
-	fprintf(login_file, "%s:%s:", user, buf);
+	fclose(login_file);
 
 	return AU_SIGN_UP_OK;
 }
 
 static Authentication_status
-checkLogin(FILE *login_file, char *user, char *password)
+checkLogin(char *user, char *password)
 {
-	char buffer[300];
+	FILE *login_file;
+	char buffer[500];
 	char *token;
+
+	login_file = fopen(LOGIN_FILE, "r");
 
 	if (!fgets(buffer, sizeof(buffer), login_file))
 		return AU_ERROR;
@@ -145,15 +209,21 @@ checkLogin(FILE *login_file, char *user, char *password)
 		}
 		token = strtok(NULL, ":");
 	}
+
+	fclose(login_file);
+
 	return AU_AUTHENTICATION_ERROR;	
 }
 
 static int
-countMaxUsers(FILE *login_file)
+countMaxUsers(void)
 {
+	FILE *login_file;
 	int count;
-	char buffer[300];
+	char buffer[1024];
 	char *token;
+
+	login_file = fopen(LOGIN_FILE, "r");
 
 	if (!fgets(buffer, sizeof(buffer), login_file))
 		return AU_ERROR;
@@ -164,5 +234,8 @@ countMaxUsers(FILE *login_file)
 		token = strtok(NULL, ":");
 		count++;
 	}
+
+	fclose(login_file);
+
 	return count;
 }
