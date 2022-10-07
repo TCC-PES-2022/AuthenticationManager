@@ -8,7 +8,6 @@ Authentication_status sign_up(char *, char *);
 Authentication_status login(char *, char *);
 Authentication_status remove_user(char *);
 static int check_file(void);
-static void create_file(void);
 static Authentication_status sanitizeUser(char *);
 static Authentication_status sanitizePassword(char *);
 static Authentication_status saveNewUserAndPassword(char *, char *);
@@ -26,7 +25,8 @@ sign_up(char *user, char *password)
 
 	/* check if file exist */
 	if (!check_file())
-		create_file();
+		if (system("touch shadow"))
+			return AU_ERROR;
 
 	/* sanitize user and password */
 	status = sanitizeUser(user);
@@ -76,13 +76,18 @@ remove_user(char *user)
 	if (!fgets(buffer, sizeof(buffer), login_file))
 		return AU_ERROR;
 	
+	printf("%s\n", buffer);
+	printf("%s\n", user);
 	find_user = strstr(buffer, user);
+	printf("%s\n", find_user);
 	if (!find_user)
 		return AU_REMOVE_USER_ERROR;
 
 	buffer[strlen(buffer) - strlen(find_user)] = '\0';
 	find_user = find_user + strlen(user);
+	printf("%s\n", buffer);
 	strcat(buffer, find_user);
+	printf("%s\n", find_user);
 
 	fputs(buffer, login_file);
 
@@ -95,7 +100,7 @@ remove_user(char *user)
 /* LOCAL FUNCTIONS */
 /*******************/
 
-/********************************* Permission ********************************/
+/********************************* Create file ********************************/
 
 static int
 check_file(void)
@@ -105,13 +110,6 @@ check_file(void)
 		return 1;
 	else
 		return 0;
-}
-
-static void
-create_file(void)
-{
-	system("touch shadow");
-	return;
 }
 
 /********************************* Sanitize **********************************/

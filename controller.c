@@ -22,7 +22,7 @@ main(int argc, char **argv)
 				strcpy(password, optarg);
 				break;
 			case 'r':
-				printf("%d\n", remove_user(user));
+				printf("%d\n", remove_user(optarg));
 				break;
 			case 'a':
 				printf("%d\n", login(user, password));
