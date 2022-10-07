@@ -68,30 +68,32 @@ Authentication_status
 remove_user(char *user)
 {
 	FILE *login_file;
+	char *tmp_file_name = "newshadow";
+	FILE *tmp_file;
 	char *find_user;
 	char buffer[1024];
 
 	login_file = fopen(LOGIN_FILE, "rw");
+	tmp_file = fopen(tmp_file_name, "w");
 
 	if (!fgets(buffer, sizeof(buffer), login_file))
 		return AU_ERROR;
 	
-	printf("%s\n", buffer);
-	printf("%s\n", user);
 	find_user = strstr(buffer, user);
-	printf("%s\n", find_user);
 	if (!find_user)
 		return AU_REMOVE_USER_ERROR;
 
 	buffer[strlen(buffer) - strlen(find_user)] = '\0';
-	find_user = find_user + strlen(user);
-	printf("%s\n", buffer);
+	find_user = find_user + strlen(user) + 1;
 	strcat(buffer, find_user);
-	printf("%s\n", find_user);
 
-	fputs(buffer, login_file);
+	fprintf(login_file, "%s", buffer);
+	fprintf(tmp_file, "%s", buffer);
+
+	system("mv newshadow shadow");
 
 	fclose(login_file);
+	fclose(tmp_file);
 
 	return AU_REMOVE_USER_OK;
 }
@@ -173,7 +175,7 @@ saveNewUserAndPassword(char *user, char *password)
 {
 	FILE *login_file;
 
-	login_file = fopen(LOGIN_FILE, "ab+");
+	login_file = fopen(LOGIN_FILE, "a+b");
 
 	if (!login_file)
 		return AU_ERROR;	
