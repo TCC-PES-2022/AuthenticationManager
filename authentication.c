@@ -12,6 +12,7 @@ static Authentication_status sanitizeUser(char *);
 static Authentication_status sanitizePassword(char *);
 static Authentication_status saveNewUserAndPassword(char *, char *);
 static Authentication_status checkLogin(char *, char *);
+static Authentication_status user_exist(char *);
 static int countMaxUsers(void);
 
 /********************/
@@ -38,6 +39,8 @@ sign_up(char *user, char *password)
 
 	if (countMaxUsers() > 11)
 		return AU_MAX_USERS_REACHED;
+	if (user_exist(user) == AU_USER_EXIST)
+		return AU_USER_EXIST;
 	if (status == AU_SIGN_UP_ERROR)
 		return AU_SIGN_UP_ERROR;
 
@@ -180,7 +183,7 @@ saveNewUserAndPassword(char *user, char *password)
 	if (!login_file)
 		return AU_ERROR;	
 
-	fprintf(login_file, "%s:%s:", user, password);
+	fprintf(login_file, "%s:%s\n", user, password);
 
 	fclose(login_file);
 
@@ -203,7 +206,7 @@ checkLogin(char *user, char *password)
 
 	while (token) {
 		if (!strcmp(user, token)) {
-			token = strtok(NULL, ":");
+			token = strtok(buffer, "\n");
 			if (!strcmp(password, token))
 				return AU_AUTHENTICATION_OK;
 		}
@@ -213,6 +216,28 @@ checkLogin(char *user, char *password)
 	fclose(login_file);
 
 	return AU_AUTHENTICATION_ERROR;	
+}
+
+static Authentication_status
+user_exist(char *user)
+{
+	char buffer[BUFFER_SIZE];
+	char *token;
+	FILE *file;
+
+	file = fopen(LOGIN_FILE, "r");
+
+	fgets(buffer, BUFFER_SIZE, file);
+	token = strtok(buffer, ":");
+	if (!strcmp(user, token))
+		return AU_USER_EXIST;
+	while (fgets(buffer, BUFFER_SIZE, file)) {
+		strtok(NULL, ":");
+		if (!strcmp(user, token))
+			return AU_USER_EXIST;
+	}
+
+	return AU_USER_DOES_NOT_EXIST;
 }
 
 static int
