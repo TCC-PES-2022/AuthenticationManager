@@ -37,7 +37,7 @@ sign_up(char *user, char *password)
 	if (status != AU_SIGN_UP_OK)
 		return status;
 
-	if (countMaxUsers() > 11)
+	if (countMaxUsers() > 5)
 		return AU_MAX_USERS_REACHED;
 	if (user_exist(user) == AU_USER_EXIST)
 		return AU_USER_EXIST;
@@ -70,28 +70,22 @@ login(char *user, char *password)
 Authentication_status
 remove_user(char *user)
 {
-	FILE *login_file;
-	char *tmp_file_name = "newshadow";
-	FILE *tmp_file;
+	char buffer[BUFFER_SIZE];
+	char tmp_buffer[BUFFER_SIZE];
 	char *find_user;
-	char buffer[1024];
+	char *tmp_file_name = "newshadow";
+	FILE *login_file;
+	FILE *tmp_file;
 
 	login_file = fopen(LOGIN_FILE, "rw");
 	tmp_file = fopen(tmp_file_name, "w");
 
-	if (!fgets(buffer, sizeof(buffer), login_file))
-		return AU_ERROR;
-	
-	find_user = strstr(buffer, user);
-	if (!find_user)
-		return AU_REMOVE_USER_ERROR;
-
-	buffer[strlen(buffer) - strlen(find_user)] = '\0';
-	find_user = find_user + strlen(user) + 1;
-	strcat(buffer, find_user);
-
-	fprintf(login_file, "%s", buffer);
-	fprintf(tmp_file, "%s", buffer);
+	while (fgets(buffer, BUFFER_SIZE, login_file)) {
+		strcpy(tmp_buffer, buffer);
+		find_user = strtok(tmp_buffer, ":");
+		if (strcmp(user, find_user))
+			fprintf(tmp_file, "%s", buffer);
+	}
 
 	system("mv newshadow shadow");
 
@@ -248,19 +242,12 @@ countMaxUsers(void)
 	FILE *login_file;
 	int count;
 	char buffer[1024];
-	char *token;
 
 	login_file = fopen(LOGIN_FILE, "r");
 
-	if (!fgets(buffer, sizeof(buffer), login_file))
-		return AU_ERROR;
-
-	token = strtok(buffer, ":");
-	count = 1;
-	while (token) {
-		token = strtok(NULL, ":");
+	count = 0;
+	while (fgets(buffer, BUFFER_SIZE, login_file))
 		count++;
-	}
 
 	fclose(login_file);
 
