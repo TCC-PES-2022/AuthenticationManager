@@ -240,6 +240,8 @@ user_exist(char *user)
 	return AU_USER_DOES_NOT_EXIST;
 }
 
+/******************************************************************************/
+
 static int
 countMaxUsers(void)
 {
