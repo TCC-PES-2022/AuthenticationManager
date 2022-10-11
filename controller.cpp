@@ -17,8 +17,8 @@ void* GUI(void* arg)
     if (iniciar_UI_interface(&img_gui,&aut_gui)) {
         //img_gui.byte_controle = UI_Carregar_Imagem; // APENAS PARA TESTES
         aut_gui.byte_controle = UI_EnviarLogin; // APENAS PARA TESTES
-	//memcpy(aut_gui.autenticao.login, login, sizeof(login));
-	//memcpy(aut_gui.autenticao.senha, senha, sizeof(senha));
+	memcpy(aut_gui.autenticao.login, login, sizeof(login));
+	memcpy(aut_gui.autenticao.senha, senha, sizeof(senha));
         val_teste = UI_EnviarLogin;
     }
     pthread_detach(pthread_self());
@@ -72,8 +72,6 @@ int
 main(int argc, char **argv)
 {
 	int opt;
-	char user[32];
-	char password[32];
 
 	pthread_t t;
 	pthread_create(&t, NULL, GUI, NULL);
@@ -86,11 +84,12 @@ main(int argc, char **argv)
 		val = verificarFilas(&img_controler, &aut_controler, UI__GUI);
 		if (val == RP_fila_autenticacao) {
 			aut_controler.byte_controle = UI_Aguardar;
+			printf("%s\n", aut_controler.autenticao.login);
+			printf("%s\n", aut_controler.autenticao.senha);
 
-			printf("GUI: %d\n",
+			printf("TEST: %d\n",
 			login((char*)aut_controler.autenticao.login, (char*)
 			aut_controler.autenticao.senha));
-			printf("Test: %d\n", login("NewUserFLS", "NEWPassword@"));
 
 			aut_controler =
 			*verificar_autenticacao_Controler(UI_Ok,
