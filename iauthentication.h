@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <regex.h>
 #include <sys/stat.h>
+#include <gcrypt.h>
 
 #define MIN_LEN_USER 8
 #define MAX_LEN_USER 32

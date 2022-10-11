@@ -12,7 +12,8 @@ static Authentication_status checkLogin(char *, char *);
 static int fileExist(void);
 static int sanitizeUser(char *);
 static int sanitizePassword(char *);
-static int countMaxUsers(void);
+static unsigned char *encode(char *);
+static unsigned int countMaxUsers(void);
 
 /********************/
 /* PUBLIC FUNCTIONS */
@@ -88,14 +89,26 @@ removeUser(char *user)
 static Authentication_status
 saveNewUserAndPassword(char *user, char *password)
 {
+	unsigned int i;
+	unsigned char *encode_password;
+	unsigned int sha256_length;
+	char string_encode[BUFFER_SIZE];
 	FILE *login_file;
 
 	login_file = fopen(LOGIN_FILE, "a+b");
 
 	if (!login_file)
 		return AU_ERROR;	
+	
+	sha256_length = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+	encode_password = encode(password);
 
-	fprintf(login_file, "%s:%s:\n", user, password);
+	/* convert encode password to string */
+	for (i = 0; i < sha256_length; i++)
+		sprintf(string_encode+(i*2), "%02x", encode_password[i]);
+
+	/* write on file */
+	fprintf(login_file, "%s:%s:\n", user, string_encode);
 
 	fclose(login_file);
 
@@ -105,17 +118,28 @@ saveNewUserAndPassword(char *user, char *password)
 static Authentication_status
 checkLogin(char *user, char *password)
 {
+	unsigned int i;
+	unsigned char *encode_password;
+	unsigned int sha256_length;
+	char string_encode[BUFFER_SIZE];
 	char buffer[BUFFER_SIZE];
 	char *token;
 	FILE *login_file;
 
 	login_file = fopen(LOGIN_FILE, "r");
 
+	sha256_length = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+	encode_password = encode(password);
+
+	/* convert encode password to string */
+	for (i = 0; i < sha256_length; i++)
+		sprintf(string_encode+(i*2), "%02x", encode_password[i]);
+
 	while (fgets(buffer, sizeof(buffer), login_file)) {
 		token = strtok(buffer, ":");
 		if (!strcmp(user, token)) {
 			token = strtok(NULL, ":");
-			if (!strcmp(password, token))
+			if (!strcmp(string_encode, token))
 				return AU_AUTHENTICATION_OK;
 		}
 	}
@@ -188,9 +212,23 @@ sanitizePassword(char *password)
 }
 
 
-/******************************** MAX USERS ***********************************/
+/******************************** Others **************************************/
 
-static int
+static unsigned char*
+encode(char *password)
+{
+	gcry_md_hd_t h;
+
+	/* init context */
+	gcry_md_open(&h, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
+	/* generate hash */
+	gcry_md_write(h, password, strlen(password));
+	/* get result and return */
+	return gcry_md_read(h, GCRY_MD_SHA256);
+}
+
+
+static unsigned int
 countMaxUsers(void)
 {
 	FILE *login_file;
