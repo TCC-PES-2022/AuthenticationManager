@@ -56,7 +56,7 @@ login(char *user, char *password)
 
 	/* sanitize user and password */
 	status = sanitizeUser(user);
-	if (status != AU_SIGN_UP_OK)
+	if (status != AU_AUTHENTICATION_OK)
 		return status;
 	status = sanitizePassword(password);
 	if (status != AU_SIGN_UP_OK)

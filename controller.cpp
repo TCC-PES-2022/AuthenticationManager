@@ -9,16 +9,16 @@
 /* TESTE GUI */
 void* GUI(void* arg)
 {
-    char login[32] = "OtavioSanto";
-    char senha[32] = "SenhaMarota@";
+    char login[32] = "NewUserFLS";
+    char senha[32] = "NEWPassword@";
     uint8_t val_teste = 0;
     static st_ui_image img_gui;
     static st_ui_aut aut_gui;
     if (iniciar_UI_interface(&img_gui,&aut_gui)) {
         //img_gui.byte_controle = UI_Carregar_Imagem; // APENAS PARA TESTES
         aut_gui.byte_controle = UI_EnviarLogin; // APENAS PARA TESTES
-	memcpy(aut_gui.autenticao.login, login, sizeof(login));
-	memcpy(aut_gui.autenticao.senha, senha, sizeof(senha));
+	//memcpy(aut_gui.autenticao.login, login, sizeof(login));
+	//memcpy(aut_gui.autenticao.senha, senha, sizeof(senha));
         val_teste = UI_EnviarLogin;
     }
     pthread_detach(pthread_self());
@@ -82,12 +82,15 @@ main(int argc, char **argv)
 	static st_ui_image img_controler = {0};
 	static st_ui_aut aut_controler = {0};
 	
-	while (1){
+	while (1) {
 		val = verificarFilas(&img_controler, &aut_controler, UI__GUI);
 		if (val == RP_fila_autenticacao) {
 			aut_controler.byte_controle = UI_Aguardar;
-			printf("%s\n", aut_controler.autenticao.login);
-			printf("%s\n", aut_controler.autenticao.senha);
+
+			printf("GUI: %d\n",
+			login((char*)aut_controler.autenticao.login, (char*)
+			aut_controler.autenticao.senha));
+			printf("Test: %d\n", login("NewUserFLS", "NEWPassword@"));
 
 			aut_controler =
 			*verificar_autenticacao_Controler(UI_Ok,
