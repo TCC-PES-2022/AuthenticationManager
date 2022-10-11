@@ -22,13 +22,13 @@ main(int argc, char **argv)
 				strcpy(password, optarg);
 				break;
 			case 'r':
-				printf("%d\n", remove_user(optarg));
+				printf("%d\n", removeUser(optarg));
 				break;
 			case 'a':
 				printf("%d\n", login(user, password));
 				break;
 			case 'w':
-				printf("%d\n", sign_up(user, password));
+				printf("%d\n", signUp(user, password));
 				break;
 			case 'f':
 				printf("filename: %s\n", optarg);

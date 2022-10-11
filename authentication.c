@@ -4,12 +4,12 @@
 /* FUNCTION DECLARATIONS */
 /*************************/
 
-Authentication_status sign_up(char *, char *);
+Authentication_status signUp(char *, char *);
 Authentication_status login(char *, char *);
-Authentication_status remove_user(char *);
+Authentication_status removeUser(char *);
 static Authentication_status saveNewUserAndPassword(char *, char *);
 static Authentication_status checkLogin(char *, char *);
-static int check_file(void);
+static int fileExist(void);
 static int sanitizeUser(char *);
 static int sanitizePassword(char *);
 static int countMaxUsers(void);
@@ -19,10 +19,10 @@ static int countMaxUsers(void);
 /********************/
 
 Authentication_status
-sign_up(char *user, char *password)
+signUp(char *user, char *password)
 {
 	/* check if file exist */
-	if (!check_file())
+	if (!fileExist())
 		if (system("touch shadow"))
 			return AU_ERROR;
 
@@ -34,9 +34,11 @@ sign_up(char *user, char *password)
 
 	if (countMaxUsers() > MAX_USERS)
 		return AU_MAX_USERS_REACHED;
+
 	if (checkLogin(user, password) == AU_AUTHENTICATION_OK)
 		return AU_USER_EXIST;
 
+	/* save new user and password; final step */
 	return saveNewUserAndPassword(user, password);
 }
 
@@ -53,17 +55,16 @@ login(char *user, char *password)
 }
 
 Authentication_status
-remove_user(char *user)
+removeUser(char *user)
 {
 	char buffer[BUFFER_SIZE];
 	char tmp_buffer[BUFFER_SIZE];
 	char *find_user;
-	char tmp_file_name[32] = "newshadow";
 	FILE *login_file;
 	FILE *tmp_file;
 
 	login_file = fopen(LOGIN_FILE, "rw");
-	tmp_file = fopen(tmp_file_name, "w");
+	tmp_file = fopen(TMP_LOGIN_FILE, "w");
 
 	while (fgets(buffer, BUFFER_SIZE, login_file)) {
 		strcpy(tmp_buffer, buffer);
@@ -83,8 +84,6 @@ remove_user(char *user)
 /*******************/
 /* LOCAL FUNCTIONS */
 /*******************/
-
-/************************* Save login or check login **************************/
 
 static Authentication_status
 saveNewUserAndPassword(char *user, char *password)
@@ -129,7 +128,7 @@ checkLogin(char *user, char *password)
 /********************************* Create file ********************************/
 
 static int
-check_file(void)
+fileExist(void)
 {
 	struct stat st;
 	if (!stat(LOGIN_FILE, &st))

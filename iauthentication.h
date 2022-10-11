@@ -13,9 +13,10 @@
 #define MIN_LEN_PW   8
 #define MAX_LEN_PW   32
 #define MAX_USERS    5
+#define BUFFER_SIZE  1024
 
-#define BUFFER_SIZE 1024
-#define LOGIN_FILE "shadow"
+#define LOGIN_FILE     "shadow"
+#define TMP_LOGIN_FILE "newshadow"
 
 /* enumerations */
 typedef enum authentication_system {
@@ -33,8 +34,8 @@ typedef enum authentication_system {
 } Authentication_status;
 
 /* visible functions */
-Authentication_status sign_up(char *, char *);
+Authentication_status signUp(char *, char *);
 Authentication_status login(char *, char *);
-Authentication_status remove_user(char *);
+Authentication_status removeUser(char *);
 
 #endif
