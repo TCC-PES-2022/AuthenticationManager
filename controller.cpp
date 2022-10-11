@@ -9,8 +9,8 @@
 /* TESTE GUI */
 void* GUI(void* arg)
 {
-    char login[32] = "NewUserFLS";
-    char senha[32] = "NEWPassword@";
+    char login[32] = "Otavinhos";
+    char senha[32] = "SenhaMarota@";
     uint8_t val_teste = 0;
     static st_ui_image img_gui;
     static st_ui_aut aut_gui;
@@ -82,21 +82,22 @@ main(int argc, char **argv)
 	
 	while (1) {
 		val = verificarFilas(&img_controler, &aut_controler, UI__GUI);
-		if (val == RP_fila_autenticacao) {
-			aut_controler.byte_controle = UI_Aguardar;
-			printf("%s\n", aut_controler.autenticao.login);
-			printf("%s\n", aut_controler.autenticao.senha);
+		switch (val) {
+			case RP_fila_autenticacao:
+				aut_controler.byte_controle = UI_Aguardar;
 
-			printf("TEST: %d\n",
-			login((char*)aut_controler.autenticao.login, (char*)
-			aut_controler.autenticao.senha));
+				printf("RETURN: %d\n",
+				login((char*)aut_controler.autenticao.login, (char*)
+				aut_controler.autenticao.senha));
 
-			aut_controler =
-			*verificar_autenticacao_Controler(UI_Ok,
-			&aut_controler);
+				aut_controler =
+				*verificar_autenticacao_Controler(UI_Ok,
+				&aut_controler);
+				break;
+
 		}
 		sleep(1);
 	}
-
 	return EXIT_SUCCESS;
 }
+
