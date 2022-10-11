@@ -7,14 +7,17 @@
 #include <unistd.h>
 #include <regex.h>
 #include <sys/stat.h>
+#include <gcrypt.h>
 
 #define MIN_LEN_USER 8
 #define MAX_LEN_USER 32
 #define MIN_LEN_PW   8
 #define MAX_LEN_PW   32
-
+#define MAX_USERS    5
 #define BUFFER_SIZE 1024
-#define LOGIN_FILE "shadow"
+
+#define LOGIN_FILE     "shadow"
+#define TMP_LOGIN_FILE "newshadow"
 
 /* enumerations */
 typedef enum authentication_system {

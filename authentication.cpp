@@ -4,81 +4,68 @@
 /* FUNCTION DECLARATIONS */
 /*************************/
 
-Authentication_status sign_up(char *, char *);
+Authentication_status signUp(char *, char *);
 Authentication_status login(char *, char *);
-Authentication_status remove_user(char *);
-static int check_file(void);
-static Authentication_status sanitizeUser(char *);
-static Authentication_status sanitizePassword(char *);
+Authentication_status removeUser(char *);
 static Authentication_status saveNewUserAndPassword(char *, char *);
 static Authentication_status checkLogin(char *, char *);
-static Authentication_status user_exist(char *);
-static int countMaxUsers(void);
+static int fileExist(void);
+static int sanitizeUser(char *);
+static int sanitizePassword(char *);
+static unsigned char *encode(char *);
+static unsigned int countMaxUsers(void);
 
 /********************/
 /* PUBLIC FUNCTIONS */
 /********************/
 
 Authentication_status
-sign_up(char *user, char *password)
+signUp(char *user, char *password)
 {
-	Authentication_status status;
-
 	/* check if file exist */
-	if (!check_file())
+	if (!fileExist())
 		if (system("touch shadow"))
 			return AU_ERROR;
 
 	/* sanitize user and password */
-	status = sanitizeUser(user);
-	if (status != AU_SIGN_UP_OK)
-		return status;
-	status = sanitizePassword(password);
-	if (status != AU_SIGN_UP_OK)
-		return status;
-
-	if (countMaxUsers() > 5)
-		return AU_MAX_USERS_REACHED;
-	if (user_exist(user) == AU_USER_EXIST)
-		return AU_USER_EXIST;
-	if (status == AU_SIGN_UP_ERROR)
+	if (!sanitizeUser(user))
+		return AU_SIGN_UP_ERROR;
+	if (!sanitizePassword(password))
 		return AU_SIGN_UP_ERROR;
 
-	status = saveNewUserAndPassword(user, password);
-	
-	return status;
+	if (countMaxUsers() > MAX_USERS)
+		return AU_MAX_USERS_REACHED;
+
+	if (checkLogin(user, password) == AU_AUTHENTICATION_OK)
+		return AU_USER_EXIST;
+
+	/* save new user and password; final step */
+	return saveNewUserAndPassword(user, password);
 }
 
 Authentication_status
 login(char *user, char *password)
 {
-	Authentication_status status;
-
 	/* sanitize user and password */
-	status = sanitizeUser(user);
-	if (status != AU_AUTHENTICATION_OK)
-		return status;
-	status = sanitizePassword(password);
-	if (status != AU_SIGN_UP_OK)
-		return status;
+	if (!sanitizeUser(user))
+		return AU_SIGN_UP_ERROR;
+	if (!sanitizePassword(password))
+		return AU_SIGN_UP_ERROR;
 
-	status = checkLogin(user, password);
-
-	return status;
+	return checkLogin(user, password);
 }
 
 Authentication_status
-remove_user(char *user)
+removeUser(char *user)
 {
 	char buffer[BUFFER_SIZE];
 	char tmp_buffer[BUFFER_SIZE];
 	char *find_user;
-	char tmp_file_name[32] = "newshadow";
 	FILE *login_file;
 	FILE *tmp_file;
 
 	login_file = fopen(LOGIN_FILE, "rw");
-	tmp_file = fopen(tmp_file_name, "w");
+	tmp_file = fopen(TMP_LOGIN_FILE, "w");
 
 	while (fgets(buffer, BUFFER_SIZE, login_file)) {
 		strcpy(tmp_buffer, buffer);
@@ -99,85 +86,29 @@ remove_user(char *user)
 /* LOCAL FUNCTIONS */
 /*******************/
 
-/********************************* Create file ********************************/
-
-static int
-check_file(void)
-{
-	struct stat st;
-	if (!stat(LOGIN_FILE, &st))
-		return 1;
-	else
-		return 0;
-}
-
-/********************************* Sanitize **********************************/
-
-static Authentication_status
-sanitizeUser(char *user)
-{
-	regex_t regex;
-
-	char regex_string[32] = ".*[A-Z].*";
-
-	/* test length of user and password */
-	if (strlen(user) < MIN_LEN_USER || strlen(user) > MAX_LEN_USER)
-		return AU_SIGN_UP_ERROR;
-
-	/* compile regex */
-	if (regcomp(&regex, regex_string, REG_EXTENDED))
-		return AU_ERROR;
-
-	/* execute regular expression */
-	if (regexec(&regex, user, 0, NULL, 0) != 0)
-		return AU_SIGN_UP_ERROR;
-
-	/* free regex */
-	regfree(&regex);
-
-	/* sign up with success */
-	return AU_SIGN_UP_OK;
-}
-
-static Authentication_status
-sanitizePassword(char *password)
-{
-	regex_t regex;
-
-	char regex_string[32] = ".*[!@#$%&*].*";
-
-	/* test length of user and password */
-	if (strlen(password) < MIN_LEN_PW || strlen(password) > MAX_LEN_PW)
-		return AU_SIGN_UP_ERROR;
-
-	/* compile regular expression */
-	if (regcomp(&regex, regex_string, REG_EXTENDED))
-		return AU_ERROR;
-	
-	/* execute regular expression */
-	if (regexec(&regex, password, 0, NULL, 0) != 0)
-		return AU_SIGN_UP_ERROR;
-
-	/* free regex */
-	regfree(&regex);
-
-	/* sign up with success */
-	return AU_SIGN_UP_OK;
-}
-
-/************************* Save data or check data ****************************/
-
 static Authentication_status
 saveNewUserAndPassword(char *user, char *password)
 {
+	unsigned int i;
+	unsigned char *encode_password;
+	unsigned int sha256_length;
+	char string_encode[BUFFER_SIZE];
 	FILE *login_file;
 
 	login_file = fopen(LOGIN_FILE, "a+b");
 
 	if (!login_file)
 		return AU_ERROR;	
+	
+	sha256_length = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+	encode_password = encode(password);
 
-	fprintf(login_file, "%s:%s\n", user, password);
+	/* convert encode password to string */
+	for (i = 0; i < sha256_length; i++)
+		sprintf(string_encode+(i*2), "%02x", encode_password[i]);
+
+	/* write on file */
+	fprintf(login_file, "%s:%s:\n", user, string_encode);
 
 	fclose(login_file);
 
@@ -187,24 +118,30 @@ saveNewUserAndPassword(char *user, char *password)
 static Authentication_status
 checkLogin(char *user, char *password)
 {
-	FILE *login_file;
-	char buffer[500];
+	unsigned int i;
+	unsigned char *encode_password;
+	unsigned int sha256_length;
+	char string_encode[BUFFER_SIZE];
+	char buffer[BUFFER_SIZE];
 	char *token;
+	FILE *login_file;
 
 	login_file = fopen(LOGIN_FILE, "r");
 
-	if (!fgets(buffer, sizeof(buffer), login_file))
-		return AU_ERROR;
+	sha256_length = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
+	encode_password = encode(password);
 
-	token = strtok(buffer, ":");
+	/* convert encode password to string */
+	for (i = 0; i < sha256_length; i++)
+		sprintf(string_encode+(i*2), "%02x", encode_password[i]);
 
-	while (token) {
+	while (fgets(buffer, sizeof(buffer), login_file)) {
+		token = strtok(buffer, ":");
 		if (!strcmp(user, token)) {
-			token = strtok(buffer, "\n");
-			if (!strcmp(password, token))
+			token = strtok(NULL, ":");
+			if (!strcmp(string_encode, token))
 				return AU_AUTHENTICATION_OK;
 		}
-		token = strtok(NULL, ":");
 	}
 
 	fclose(login_file);
@@ -212,31 +149,86 @@ checkLogin(char *user, char *password)
 	return AU_AUTHENTICATION_ERROR;	
 }
 
-static Authentication_status
-user_exist(char *user)
-{
-	char buffer[BUFFER_SIZE];
-	char *token;
-	FILE *file;
-
-	file = fopen(LOGIN_FILE, "r");
-
-	fgets(buffer, BUFFER_SIZE, file);
-	token = strtok(buffer, ":");
-	if (!strcmp(user, token))
-		return AU_USER_EXIST;
-	while (fgets(buffer, BUFFER_SIZE, file)) {
-		strtok(NULL, ":");
-		if (!strcmp(user, token))
-			return AU_USER_EXIST;
-	}
-
-	return AU_USER_DOES_NOT_EXIST;
-}
-
-/******************************************************************************/
+/********************************* Create file ********************************/
 
 static int
+fileExist(void)
+{
+	struct stat st;
+	if (!stat(LOGIN_FILE, &st))
+		return 1;
+	else
+		return 0;
+}
+
+/****************************** Sanitize Input *******************************/
+
+static int
+sanitizeUser(char *user)
+{
+	regex_t regex;
+	char regex_string[32] = ".*[A-Z].*";
+
+	/* test length of user */
+	if (strlen(user) < MIN_LEN_USER || strlen(user) > MAX_LEN_USER)
+		return 0;
+
+	/* compile regex; return 0 on success */
+	if (regcomp(&regex, regex_string, REG_EXTENDED))
+		return 0;
+
+	/* execute regular expression; return 0 on success */
+	if (regexec(&regex, user, 0, NULL, 0) != 0)
+		return 0;
+
+	/* free regex */
+	regfree(&regex);
+
+	return 1;
+}
+
+static int
+sanitizePassword(char *password)
+{
+	regex_t regex;
+	char regex_string[32] = ".*[!@#$%&*].*";
+
+	/* test length of password */
+	if (strlen(password) < MIN_LEN_PW || strlen(password) > MAX_LEN_PW)
+		return 0;
+
+	/* compile regular expression */
+	if (regcomp(&regex, regex_string, REG_EXTENDED))
+		return 0;
+	
+	/* execute regular expression */
+	if (regexec(&regex, password, 0, NULL, 0) != 0)
+		return 0;
+
+	/* free regex */
+	regfree(&regex);
+
+	return 1;
+}
+
+
+/******************************** Others **************************************/
+
+static unsigned char *
+encode(char *password)
+{
+	gcry_md_hd_t h;
+
+	/* init context */
+	gcry_md_open(&h, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
+	/* generate hash */
+	gcry_md_write(h, password, strlen(password));
+	/* get result and return */
+	return gcry_md_read(h, GCRY_MD_SHA256);
+}
+
+
+static unsigned int
 countMaxUsers(void)
 {
 	FILE *login_file;
