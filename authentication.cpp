@@ -73,7 +73,7 @@ remove_user(char *user)
 	char buffer[BUFFER_SIZE];
 	char tmp_buffer[BUFFER_SIZE];
 	char *find_user;
-	char *tmp_file_name = "newshadow";
+	char tmp_file_name[32] = "newshadow";
 	FILE *login_file;
 	FILE *tmp_file;
 
@@ -118,7 +118,7 @@ sanitizeUser(char *user)
 {
 	regex_t regex;
 
-	char *regex_string = ".*[A-Z].*";
+	char regex_string[32] = ".*[A-Z].*";
 
 	/* test length of user and password */
 	if (strlen(user) < MIN_LEN_USER || strlen(user) > MAX_LEN_USER)
@@ -144,7 +144,7 @@ sanitizePassword(char *password)
 {
 	regex_t regex;
 
-	char *regex_string = ".*[!@#$%&*].*";
+	char regex_string[32] = ".*[!@#$%&*].*";
 
 	/* test length of user and password */
 	if (strlen(password) < MIN_LEN_PW || strlen(password) > MAX_LEN_PW)

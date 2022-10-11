@@ -14,7 +14,6 @@
 #define MAX_LEN_PW   32
 
 #define BUFFER_SIZE 1024
-
 #define LOGIN_FILE "shadow"
 
 /* enumerations */
