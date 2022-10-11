@@ -214,7 +214,7 @@ sanitizePassword(char *password)
 
 /******************************** Others **************************************/
 
-static unsigned char*
+static unsigned char *
 encode(char *password)
 {
 	gcry_md_hd_t h;
