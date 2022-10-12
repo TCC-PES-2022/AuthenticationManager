@@ -191,7 +191,10 @@ static int
 sanitizePassword(char *password)
 {
 	regex_t regex;
-	char regex_string[32] = ".*[!@#$%&*].*";
+	char regex_string[192] =
+	"(.*[A-Z].*[0-9].*[!@#$%&*].*)|(.*[A-Z].*[!@#$%&*].*[0-9].*)|"
+	"(.*[0-9].*[A-Z].*[!@#$%&*].*)|(.*[0-9].*[!@#$%&*].*[A-Z].*)|"
+	"(.*[!@#$%&*].*[A-Z].*[0-9].*)|(.*[!@#$%&*].*[0-9].*[A-Z].*)";
 
 	/* test length of password */
 	if (strlen(password) < MIN_LEN_PW || strlen(password) > MAX_LEN_PW)
