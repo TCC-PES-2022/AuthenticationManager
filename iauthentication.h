@@ -35,8 +35,8 @@ typedef enum authentication_system {
 } Authentication_status;
 
 /* visible functions */
-Authentication_status sign_up(char *, char *);
+Authentication_status signUp(char *, char *);
 Authentication_status login(char *, char *);
-Authentication_status remove_user(char *);
+Authentication_status removeUser(char *);
 
 #endif
