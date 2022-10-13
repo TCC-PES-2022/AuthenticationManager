@@ -7,10 +7,12 @@ COM = authentication
 default: $(BIN)
 
 .c.o:
-	cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+.cpp.o:
+	$(CXX) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(BIN): $(REQ:=.o) $(COM:=.o)
-	cc $(LDFLAGS) $(LDLIBS) $(REQ:=.o) $(COM:=.o) -o $@
+	$(CXX) $(LDFLAGS) $(LDLIBS) $(REQ:=.o) $(COM:=.o) -o $@
 
 install: $(BIN)
 	mkdir -p $(DEST)/bin
