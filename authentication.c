@@ -48,9 +48,9 @@ login(char *user, char *password)
 {
 	/* sanitize user and password */
 	if (!sanitizeUser(user))
-		return AU_SIGN_UP_ERROR;
+		return AU_AUTHENTICATION_ERROR;
 	if (!sanitizePassword(password))
-		return AU_SIGN_UP_ERROR;
+		return AU_AUTHENTICATION_ERROR;
 
 	return checkLogin(user, password);
 }
