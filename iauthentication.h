@@ -21,17 +21,15 @@
 
 /* enumerations */
 typedef enum authentication_system {
-	AU_AUTHENTICATION_OK = 0,
+	AU_AUTHENTICATION_OK    = 0,
 	AU_AUTHENTICATION_ERROR = 1,
-	AU_SIGN_UP_OK = 2,
-	AU_SIGN_UP_ERROR = 3,
-	AU_REMOVE_USER_OK = 4,
-	AU_REMOVE_USER_ERROR = 5,
-	AU_USER_EXIST = 6,
-	AU_USER_DOES_NOT_EXIST = 7,
-	AU_MAX_USERS_REACHED = 8,
-	AU_PERMISSION_DENIED = 9,
-	AU_ERROR = 99
+	AU_SIGN_UP_OK           = 2,
+	AU_SIGN_UP_ERROR        = 3,
+	AU_REMOVE_USER_OK       = 4,
+	AU_REMOVE_USER_ERROR    = 5,
+	AU_USER_EXIST           = 6,
+	AU_MAX_USERS_REACHED    = 7,
+	AU_ERROR                = 99
 } Authentication_status;
 
 /* visible functions */

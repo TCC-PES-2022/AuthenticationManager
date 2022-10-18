@@ -58,6 +58,7 @@ login(char *user, char *password)
 Authentication_status
 removeUser(char *user)
 {
+	int user_exist;
 	char buffer[BUFFER_SIZE];
 	char tmp_buffer[BUFFER_SIZE];
 	char *find_user;
@@ -67,11 +68,15 @@ removeUser(char *user)
 	login_file = fopen(LOGIN_FILE, "rw");
 	tmp_file = fopen(TMP_LOGIN_FILE, "w");
 
+	user_exist = 0;
+
 	while (fgets(buffer, BUFFER_SIZE, login_file)) {
 		strcpy(tmp_buffer, buffer);
 		find_user = strtok(tmp_buffer, ":");
 		if (strcmp(user, find_user))
 			fprintf(tmp_file, "%s", buffer);
+		else
+			user_exist = 1;
 	}
 
 	system("mv newshadow shadow");
@@ -79,7 +84,7 @@ removeUser(char *user)
 	fclose(login_file);
 	fclose(tmp_file);
 
-	return AU_REMOVE_USER_OK;
+	return (user_exist) ? AU_REMOVE_USER_OK : AU_REMOVE_USER_ERROR;
 }
 
 /*******************/

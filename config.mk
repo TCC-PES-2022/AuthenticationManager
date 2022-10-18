@@ -1,9 +1,8 @@
 # version
 VERSION = 0.1
 
-BIN      = vsfls
+BIN      = login
 CC       = gcc
-CXX      = g++
 # paths
 DEST = /usr/local
 
