@@ -4,23 +4,23 @@
 /* FUNCTION DECLARATIONS */
 /*************************/
 
-Authentication_status signUp(char *, char *);
-Authentication_status login(char *, char *);
-Authentication_status removeUser(char *);
-static Authentication_status saveNewUserAndPassword(char *, char *);
-static Authentication_status checkLogin(char *, char *);
+Authentication_status signUp(const char *, const char *);
+Authentication_status login(const char *, const char *);
+Authentication_status removeUser(const char *);
+static Authentication_status saveNewUserAndPassword(const char *, const char *);
+static Authentication_status checkLogin(const char *, const char *);
 static int fileExist(void);
-static int sanitizeUser(char *);
-static int sanitizePassword(char *);
-static unsigned char *encode(char *);
+static int sanitizeUser(const char *);
+static int sanitizePassword(const char *);
+static unsigned char *encode(const char *);
 static unsigned int countMaxUsers(void);
 
 /********************/
-/* PUBLIC FUNCTIONS */
+/* EXTERN FUNCTIONS */
 /********************/
 
 Authentication_status
-signUp(char *user, char *password)
+signUp(const char *user, const char *password)
 {
 	/* check if file exist */
 	if (!fileExist())
@@ -33,7 +33,7 @@ signUp(char *user, char *password)
 	if (!sanitizePassword(password))
 		return AU_SIGN_UP_ERROR;
 
-	if (countMaxUsers() > MAX_USERS)
+	if (countMaxUsers() >= MAX_USERS)
 		return AU_MAX_USERS_REACHED;
 
 	if (checkLogin(user, password) == AU_AUTHENTICATION_OK)
@@ -44,7 +44,7 @@ signUp(char *user, char *password)
 }
 
 Authentication_status
-login(char *user, char *password)
+login(const char *user, const char *password)
 {
 	/* sanitize user and password */
 	if (!sanitizeUser(user))
@@ -56,7 +56,7 @@ login(char *user, char *password)
 }
 
 Authentication_status
-removeUser(char *user)
+removeUser(const char *user)
 {
 	int user_exist;
 	char buffer[BUFFER_SIZE];
@@ -87,12 +87,12 @@ removeUser(char *user)
 	return (user_exist) ? AU_REMOVE_USER_OK : AU_REMOVE_USER_ERROR;
 }
 
-/*******************/
-/* LOCAL FUNCTIONS */
-/*******************/
+/********************/
+/* STATIC FUNCTIONS */
+/********************/
 
 static Authentication_status
-saveNewUserAndPassword(char *user, char *password)
+saveNewUserAndPassword(const char *user, const char *password)
 {
 	unsigned int i;
 	unsigned char *encode_password;
@@ -121,7 +121,7 @@ saveNewUserAndPassword(char *user, char *password)
 }
 
 static Authentication_status
-checkLogin(char *user, char *password)
+checkLogin(const char *user, const char *password)
 {
 	unsigned int i;
 	unsigned char *encode_password;
@@ -169,7 +169,7 @@ fileExist(void)
 /****************************** Sanitize Input *******************************/
 
 static int
-sanitizeUser(char *user)
+sanitizeUser(const char *user)
 {
 	regex_t regex;
 	char regex_string[32] = ".*[A-Z].*";
@@ -193,7 +193,7 @@ sanitizeUser(char *user)
 }
 
 static int
-sanitizePassword(char *password)
+sanitizePassword(const char *password)
 {
 	regex_t regex;
 	char regex_string[192] =
@@ -223,7 +223,7 @@ sanitizePassword(char *password)
 /******************************** Others **************************************/
 
 static unsigned char *
-encode(char *password)
+encode(const char *password)
 {
 	gcry_md_hd_t h;
 

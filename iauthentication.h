@@ -37,10 +37,10 @@ typedef enum authentication_system {
 /********************/
 
 /* signUp(user, password) */
-Authentication_status signUp(char *, char *);
+Authentication_status signUp(const char *, const char *);
 /* login(user, password) */
-Authentication_status login(char *, char *);
+Authentication_status login(const char *, const char *);
 /* removeUser(user) */
-Authentication_status removeUser(char *);
+Authentication_status removeUser(const char *);
 
 #endif
