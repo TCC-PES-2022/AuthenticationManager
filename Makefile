@@ -12,7 +12,7 @@ HEADER = iauthentication
 OBJ    = authentication\
          main
 
-SOBJ   = authentication
+SOBJ   = libauthentication
 
 LIB    = $(SOBJ:=.so)
 
