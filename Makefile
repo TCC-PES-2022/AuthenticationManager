@@ -1,37 +1,48 @@
-BIN      = log
+BIN      = login
 CC       = cc
 AR       = ar
 CFLAGS   = -Wall -Wextra -O3 -march=native -fPIC
-LFLAGS   = -shared
 LDFLAGS  = -lgcrypt -lgpg-error
 LIBDEST  = ${HOME}/pes/lib
 INCDEST  = ${HOME}/pes/include
 
 HEADER = iauthentication
 
-OBJ    = authentication\
-         main
+MAIN   = main
 
-SOBJ   = libauthentication
+OBJ    = authentication
 
-LIB    = $(SOBJ:=.so)
+LIB    = libauthentication
+
+# Dynamic library
+DLIB   = $(LIB:=.so)
+# Static library
+SLIB   = $(LIB:=.a)
 
 default: $(BIN)
 
-lib: $(LIB)
+lib : slib dlib
+slib: $(SLIB)
+dlib: $(DLIB)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BIN): $(OBJ:=.o) $(HEADER:=.h)
-	$(CC) $(OBJ:=.o) $(LDFLAGS) -o $@
+$(BIN): $(OBJ:=.o) $(MAIN:=.o) $(HEADER:=.h)
+	$(CC) $(LDFLAGS) $^ -o $@
 
-$(LIB): $(OBJ:=.o)
-	$(CC) $(LFLAGS) $(LDFLAGS) $^ -o $@
-	$(AR) -rc $(SOBJ:=.a) $^
+# Generate dynamic library rule
+$(DLIB): $(OBJ:=.o)
+	$(CC) -shared $^ -o $@
+
+# Generate static library rule
+$(SLIB): $(OBJ:=.o)
+	$(AR) -rcs $@ $^
 
 move:
-	cp -f $(SOBJ:=.so) $(SOBJ:=.a) $(LIBDEST)
+	mkdir -p $(LIBDEST)
+	mkdir -p $(INCDEST)
+	cp -f $(DLIB) $(SLIB) $(LIBDEST)
 	cp -f $(HEADER:=.h) $(INCDEST)
 
 run: default
@@ -48,4 +59,4 @@ uninstall:
 clean:
 	rm -f $(BIN) modules/*.o *.o *.so *.a
 
-.PHONY: install uninstall clean run move
+.PHONY: install uninstall clean run move lib slib dlib
