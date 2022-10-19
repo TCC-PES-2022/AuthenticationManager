@@ -1,13 +1,18 @@
-# version
-VERSION = 0.1
+BIN        = login
+CC         = cc
+AR         = ar
+CFLAGS     = -Wall -Wextra -O3 -march=native -fPIC
+COVFLAGS   = -fprofile-arcs -ftest-coverage -g
+LDFLAGS    = -lgcrypt -lgpg-error
+COVLDFLAGS = -lgcov --coverage
+DESTDIR    ?= /tmp
+LIBDEST    ?= $(DESTDIR)/lib
+INCDEST    ?= $(DESTDIR)/include
 
-BIN      = login
-CC       = gcc
-# paths
-DEST = /usr/local
+HEADER = iauthentication
 
-X11INC = /usr/local/include
-X11LIB = /usr/local/lib
+MAIN   = main
 
-CFLAGS   = -Wall -Wextra -Os -march=native
-LDFLAGS  = -lgcrypt
+OBJ    = authentication
+
+LIB    = libauthentication

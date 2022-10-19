@@ -1,29 +1,35 @@
-BIN      = login
-CC       = cc
-AR       = ar
-CFLAGS   = -Wall -Wextra -O3 -march=native -fPIC
-LDFLAGS  = -lgcrypt -lgpg-error
-LIBDEST  = ${HOME}/pes/lib
-INCDEST  = ${HOME}/pes/include
-
-HEADER = iauthentication
-
-MAIN   = main
-
-OBJ    = authentication
-
-LIB    = libauthentication
+include config.mk
 
 # Dynamic library
 DLIB   = $(LIB:=.so)
 # Static library
 SLIB   = $(LIB:=.a)
 
+#########
+# RULES #
+#########
+
 default: $(BIN)
 
 lib : slib dlib
+
 slib: $(SLIB)
+
 dlib: $(DLIB)
+
+move: smove dmove
+
+################################
+# COVERAGE CODE SUPPORT (gcov) #
+################################
+
+cov: ccov ldcov
+
+ccov: $(OBJ:=.c) $(MAIN:=.c)
+	$(CC) $(CFLAGS) $(COVFLAGS) -c $^
+
+ldcov: $(OBJ:=.o)
+	$(CC) $(LDFLAGS) $(COVLDFLAGS) $(OBJ:=.o) $(MAIN:=.o) -o $(BIN)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -39,14 +45,19 @@ $(DLIB): $(OBJ:=.o)
 $(SLIB): $(OBJ:=.o)
 	$(AR) -rcs $@ $^
 
-move:
+smove:
 	mkdir -p $(LIBDEST)
 	mkdir -p $(INCDEST)
-	cp -f $(DLIB) $(SLIB) $(LIBDEST)
+	cp -f $(SLIB) $(LIBDEST)
+	cp -f $(HEADER:=.h) $(INCDEST)
+dmove:
+	mkdir -p $(LIBDEST)
+	mkdir -p $(INCDEST)
+	cp -f $(DLIB) $(LIBDEST)
 	cp -f $(HEADER:=.h) $(INCDEST)
 
 run: default
-	@./log
+	@./$(BIN)
 
 install: $(BIN)
 	mkdir -p $(DEST)/bin
@@ -58,5 +69,8 @@ uninstall:
 
 clean:
 	rm -f $(BIN) modules/*.o *.o *.so *.a
+
+cleanall:
+	rm -f $(BIN) modules/*.o *.o *.so *.a *.g* shadow
 
 .PHONY: install uninstall clean run move lib slib dlib
