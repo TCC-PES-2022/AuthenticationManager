@@ -14,12 +14,12 @@
 #define MIN_LEN_PW   8
 #define MAX_LEN_PW   32
 #define MAX_USERS    5
-#define BUFFER_SIZE  1024
+#define BUFFER_SIZE  256
 
 #define LOGIN_FILE     "shadow"
 #define TMP_LOGIN_FILE "newshadow"
 
-/* enumerations */
+/* Authentication system status return */
 typedef enum authentication_system {
 	AU_AUTHENTICATION_OK    = 0,
 	AU_AUTHENTICATION_ERROR = 1,
@@ -32,9 +32,15 @@ typedef enum authentication_system {
 	AU_ERROR                = 99
 } Authentication_status;
 
-/* visible functions */
+/********************/
+/* EXTERN FUNCTIONS */
+/********************/
+
+/* signUp(user, password) */
 Authentication_status signUp(char *, char *);
+/* login(user, password) */
 Authentication_status login(char *, char *);
+/* removeUser(user) */
 Authentication_status removeUser(char *);
 
 #endif
