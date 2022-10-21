@@ -1,6 +1,10 @@
 #ifndef IAUTHENTICATION_H
 #define IAUTHENTICATION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,5 +46,9 @@ Authentication_status signUp(const char *, const char *);
 Authentication_status login(const char *, const char *);
 /* removeUser(user) */
 Authentication_status removeUser(const char *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -9,7 +9,8 @@ Authentication_status login(const char *, const char *);
 Authentication_status removeUser(const char *);
 static Authentication_status saveNewUserAndPassword(const char *, const char *);
 static Authentication_status checkLogin(const char *, const char *);
-static int fileExist(void);
+static void touchFile(void);
+static void substituteFile(void);
 static int sanitizeUser(const char *);
 static int sanitizePassword(const char *);
 static unsigned char *encode(const char *);
@@ -22,10 +23,7 @@ static unsigned int countMaxUsers(void);
 Authentication_status
 signUp(const char *user, const char *password)
 {
-	/* check if file exist */
-	if (!fileExist())
-		if (system("touch shadow"))
-			return AU_ERROR;
+	touchFile();
 
 	/* sanitize user and password */
 	if (!sanitizeUser(user))
@@ -46,6 +44,8 @@ signUp(const char *user, const char *password)
 Authentication_status
 login(const char *user, const char *password)
 {
+	touchFile();
+
 	/* sanitize user and password */
 	if (!sanitizeUser(user))
 		return AU_AUTHENTICATION_ERROR;
@@ -79,7 +79,7 @@ removeUser(const char *user)
 			user_exist = 1;
 	}
 
-	system("mv newshadow shadow");
+	substituteFile();
 
 	fclose(login_file);
 	fclose(tmp_file);
@@ -154,16 +154,28 @@ checkLogin(const char *user, const char *password)
 	return AU_AUTHENTICATION_ERROR;	
 }
 
-/********************************* Create file ********************************/
+/************************** Create and substitute file ************************/
 
-static int
-fileExist(void)
+static void
+touchFile(void)
 {
-	struct stat st;
-	if (!stat(LOGIN_FILE, &st))
-		return 1;
-	else
-		return 0;
+	/* If file doesn't exist, create it */
+	char touch_file[32];
+	snprintf(touch_file, 32, "%s %s", "touch", LOGIN_FILE);
+	system(touch_file);
+
+	return;
+}
+
+static void
+substituteFile(void)
+{
+	/* Substitute temporary file to new login file */
+	char substitute_file[32];
+	snprintf(substitute_file, 32, "%s %s %s", "mv", TMP_LOGIN_FILE, LOGIN_FILE);
+	system(substitute_file);
+
+	return;
 }
 
 /****************************** Sanitize Input *******************************/
