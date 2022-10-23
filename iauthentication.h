@@ -40,12 +40,9 @@ typedef enum authentication_system {
 /* EXTERN FUNCTIONS */
 /********************/
 
-/* signUp(user, password) */
-Authentication_status signUp(const char *, const char *);
-/* login(user, password) */
-Authentication_status login(const char *, const char *);
-/* removeUser(user) */
-Authentication_status removeUser(const char *);
+Authentication_status signUp(const char *user, const char *password);
+Authentication_status login(const char *user, const char *password);
+Authentication_status removeUser(const char *user);
 
 #ifdef __cplusplus
 }
