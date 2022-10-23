@@ -65,11 +65,15 @@ removeUser(const char *user)
 	FILE *login_file;
 	FILE *tmp_file;
 
+	touchFile();
+
 	login_file = fopen(LOGIN_FILE, "rw");
 	tmp_file = fopen(TMP_LOGIN_FILE, "w");
 
 	user_exist = 0;
 
+	/* Get users and copy to temporary file, if isn't the user to remove */
+	/* If user exist, don't copy to temporary file and change flag value */
 	while (fgets(buffer, BUFFER_SIZE, login_file)) {
 		strcpy(tmp_buffer, buffer);
 		find_user = strtok(tmp_buffer, ":");
