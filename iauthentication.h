@@ -20,8 +20,8 @@ extern "C" {
 #define MAX_USERS    5
 #define BUFFER_SIZE  256
 
-#define LOGIN_FILE     "shadow"
-#define TMP_LOGIN_FILE "newshadow"
+#define LOGIN_FILE     "~/pes/users/shadow"
+#define TMP_LOGIN_FILE "~/pes/users/newshadow"
 
 /* Authentication system status return */
 typedef enum authentication_system {
