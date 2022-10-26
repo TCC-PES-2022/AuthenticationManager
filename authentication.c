@@ -4,23 +4,23 @@
 /* FUNCTION DECLARATIONS */
 /*************************/
 
-Authentication_status signUp(const char *, const char *);
-Authentication_status login(const char *, const char *);
-Authentication_status removeUser(const char *);
-static Authentication_status saveNewUserAndPassword(const char *, const char *);
-static Authentication_status checkLogin(const char *, const char *);
-static void touchFile(void);
-static void substituteFile(void);
-static int sanitizeUser(const char *);
-static int sanitizePassword(const char *);
-static unsigned char *encode(const char *);
+Au_status           signUp(const char *, const char *);
+Au_status           login(const char *, const char *);
+Au_status           removeUser(const char *);
+static Au_status    saveNewUserAndPassword(const char *, const char *);
+static Au_status    checkLogin(const char *, const char *);
+static void         touchFile(void);
+static void         substituteFile(void);
+static int          sanitizeUser(const char *);
+static int          sanitizePassword(const char *);
+static void         encode(char *, const char *, unsigned int);
 static unsigned int countMaxUsers(void);
 
 /********************/
 /* EXTERN FUNCTIONS */
 /********************/
 
-Authentication_status
+Au_status
 signUp(const char *user, const char *password)
 {
 	touchFile();
@@ -41,7 +41,7 @@ signUp(const char *user, const char *password)
 	return saveNewUserAndPassword(user, password);
 }
 
-Authentication_status
+Au_status
 login(const char *user, const char *password)
 {
 	touchFile();
@@ -55,7 +55,7 @@ login(const char *user, const char *password)
 	return checkLogin(user, password);
 }
 
-Authentication_status
+Au_status
 removeUser(const char *user)
 {
 	int user_exist;
@@ -95,11 +95,10 @@ removeUser(const char *user)
 /* STATIC FUNCTIONS */
 /********************/
 
-static Authentication_status
+static Au_status
 saveNewUserAndPassword(const char *user, const char *password)
 {
-	unsigned int i;
-	unsigned char *encode_password;
+	int i;
 	unsigned int sha256_length;
 	char string_encode[BUFFER_SIZE];
 	FILE *login_file;
@@ -109,12 +108,13 @@ saveNewUserAndPassword(const char *user, const char *password)
 	if (!login_file)
 		return AU_ERROR;	
 	
+	/* get size of sha256 length */
 	sha256_length = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
-	encode_password = encode(password);
-
-	/* convert encode password to string */
-	for (i = 0; i < sha256_length; i++)
-		sprintf(string_encode+(i*2), "%02x", encode_password[i]);
+	/* encode using HMAC sha256 */
+	encode(string_encode, password, sha256_length);
+	/* encode using HMAC sha256 - N iterations */
+	for (i = 0; i < ITERATIONS; i++)
+		encode(string_encode, string_encode, sha256_length);
 
 	/* write on file */
 	fprintf(login_file, "%s:%s:\n", user, string_encode);
@@ -124,11 +124,10 @@ saveNewUserAndPassword(const char *user, const char *password)
 	return AU_SIGN_UP_OK;
 }
 
-static Authentication_status
+static Au_status
 checkLogin(const char *user, const char *password)
 {
-	unsigned int i;
-	unsigned char *encode_password;
+	int i;
 	unsigned int sha256_length;
 	char string_encode[BUFFER_SIZE];
 	char buffer[BUFFER_SIZE];
@@ -137,12 +136,13 @@ checkLogin(const char *user, const char *password)
 
 	login_file = fopen(LOGIN_FILE, "r");
 
+	/* get size of sha256 length */
 	sha256_length = gcry_md_get_algo_dlen(GCRY_MD_SHA256);
-	encode_password = encode(password);
-
-	/* convert encode password to string */
-	for (i = 0; i < sha256_length; i++)
-		sprintf(string_encode+(i*2), "%02x", encode_password[i]);
+	/* encode using HMAC sha256 - first iteration */
+	encode(string_encode, password, sha256_length);
+	/* encode using HMAC sha256 - N iterations */
+	for (i = 0; i < ITERATIONS; i++)
+		encode(string_encode, string_encode, sha256_length);
 
 	while (fgets(buffer, sizeof(buffer), login_file)) {
 		token = strtok(buffer, ":");
@@ -236,19 +236,35 @@ sanitizePassword(const char *password)
 }
 
 
-/******************************** Others **************************************/
+/***************************** Encode algorithm *******************************/
 
-static unsigned char *
-encode(const char *password)
+static void
+encode(char *string_encode, const char *password, unsigned int sha256_length)
 {
+	char newpassword[96];
+	unsigned int i;
+	unsigned char *encode_password;
 	gcry_md_hd_t h;
 
+	/* include salt */
+	strncpy(newpassword, password, 32);
+	newpassword[32] = '\0';
+	strcat(newpassword, SALT);
+
 	/* init context */
-	gcry_md_open(&h, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
+	gcry_md_open(&h, GCRY_MD_SHA256, GCRY_MD_FLAG_HMAC);
+	/* insert mac key */
+	gcry_md_setkey(h, MAC_KEY, sha256_length);
 	/* generate hash */
-	gcry_md_write(h, password, strlen(password));
-	/* get result and return */
-	return gcry_md_read(h, GCRY_MD_SHA256);
+	gcry_md_write(h, newpassword, strlen(newpassword));
+	/* get result */
+	encode_password = gcry_md_read(h, GCRY_MD_SHA256);
+
+	/* convert encode password to string */
+	for (i = 0; i < sha256_length; i++)
+		sprintf(string_encode+(i*2), "%02x", encode_password[i]);
+
+	return;
 }
 
 

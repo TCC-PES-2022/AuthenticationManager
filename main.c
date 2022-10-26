@@ -51,87 +51,65 @@ main(int argc, char **argv)
 static void
 test(void)
 {
+	int i;
+
 	/* -------------------- Inputs -------------------------- */
 
-	/* Capital letter */
-	char user1[32]     = "UmNovoUsuario";
-	/* without capital letter */
-	char user2[32]     = "umnovousuario";
-	/* empty user */
-	char user3[32]     = "";
-	/* short user */
-	char user4[32]     = "user";
+	const char *user_valid[] = {"UmNovoUsuario", "UsuarioNovo",
+	"AnotherUser", "UserAnother", "OtherUser"}; 
 
-	/* Capital letter, numbers and special characters */
-	char password1[32] = "SenhaMarot@123";
-	/* Without Capital letter */
-	char password2[32] = "senhasarot@123";
-	/* Without special letter */
-	char password3[32] = "SenhaMarota123";
-	/* Without numbers */
-	char password4[32] = "SenhaMarot@";
-	/* empty password */
-	char password5[32] = "";
+	const char *user_invalid[] = {"umnovousuario", "", "user", "OA", "alkjdfls"};
 
-	/* -------------------- sugnUP user  -------------------- */
+	const char *password_valid[] = {"SenhaMarot@123", "SenhaMarota@123",
+	"NovaSenha@123", "Uma@Senha1Qualquer", "Another@Senha1"};
 
-	assert(2 == signUp(user1,password1));
-	assert(6 == signUp(user1,password1));
-	assert(3 == signUp(user1,password2));
-	assert(3 == signUp(user1,password3));
-	assert(3 == signUp(user1,password4));
-	assert(3 == signUp(user1,password5));
+	const char *password_invalid[] = {"", "SenhaMarot@", "senhaqualquer",
+	"NovaSenha", "alkjdf123123"};
 
-	assert(3 == signUp(user2,password1));
-	assert(3 == signUp(user2,password2));
-	assert(3 == signUp(user2,password3));
-	assert(3 == signUp(user2,password4));
-	assert(3 == signUp(user2,password5));
+	/* -------------------- sugnUP user Fail -------------------- */
 
-	assert(3 == signUp(user3,password1));
-	assert(3 == signUp(user3,password2));
-	assert(3 == signUp(user3,password3));
-	assert(3 == signUp(user3,password4));
-	assert(3 == signUp(user3,password5));
+	for (i = 0; i < 5; i++)
+		assert(3 == signUp(user_invalid[i], password_valid[i]));
 
-	assert(3 == signUp(user4,password1));
-	assert(3 == signUp(user4,password2));
-	assert(3 == signUp(user4,password3));
-	assert(3 == signUp(user4,password4));
-	assert(3 == signUp(user4,password5));
+	/* -------------------- sugnUP password Fail ---------------- */
 
-	/* -------------------- authenticate -------------------- */
+	for (i = 0; i < 5; i++)
+		assert(3 == signUp(user_valid[i], password_invalid[i]));
 
-	assert(0 == login(user1,password1));
-	assert(1 == login(user1,password2));
-	assert(1 == login(user1,password3));
-	assert(1 == login(user1,password4));
-	assert(1 == login(user1,password5));
+	/* -------------------- sugnUP user Success ----------------- */
 
-	assert(1 == login(user2,password1));
-	assert(1 == login(user2,password2));
-	assert(1 == login(user2,password3));
-	assert(1 == login(user2,password4));
-	assert(1 == login(user2,password5));
+	for (i = 0; i < 5; i++)
+		assert(2 == signUp(user_valid[i], password_valid[i]));
 
-	assert(1 == login(user3,password1));
-	assert(1 == login(user3,password2));
-	assert(1 == login(user3,password3));
-	assert(1 == login(user3,password4));
-	assert(1 == login(user3,password5));
+	/* -------------------- Max users --------------------------- */
 
-	assert(1 == login(user4,password1));
-	assert(1 == login(user4,password2));
-	assert(1 == login(user4,password3));
-	assert(1 == login(user4,password4));
-	assert(1 == login(user4,password5));
+	assert(7 == signUp("Usuariozinho", "Senhaz1nh@"));
 
-	/* -------------------- Remove user --------------------- */
+	/* -------------------- Success login ----------------------- */
 
-	assert(4 == removeUser(user1));
-	assert(5 == removeUser(user2));
-	assert(5 == removeUser(user3));
-	assert(5 == removeUser(user4));
+	for (i = 0; i < 5; i++)
+		assert(0 == login(user_valid[i], password_valid[i]));
+
+	/* -------------------- Fail login -------------------------- */
+
+	for (i = 0; i < 5; i++)
+		assert(1 == login(user_valid[i], password_invalid[i]));
+
+	/* -------------------- Remove users fail ------------------- */
+
+	for (i = 0; i < 5; i++)
+		assert(5 == removeUser(user_invalid[i]));
+
+	/* -------------------- Remove users ------------------------ */
+
+	for (i = 0; i < 5; i++)
+		assert(4 == removeUser(user_valid[i]));
+
+	/* -------------------- signUP same user -------------------- */
+	
+	assert(2 == signUp(user_valid[0], password_valid[0]));
+	assert(6 == signUp(user_valid[0], password_valid[0]));
+	assert(4 == removeUser(user_valid[0]));
 
 	puts("All tests passed!");
 

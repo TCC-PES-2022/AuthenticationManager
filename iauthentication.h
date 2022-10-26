@@ -19,12 +19,15 @@ extern "C" {
 #define MAX_LEN_PW   32
 #define MAX_USERS    5
 #define BUFFER_SIZE  256
+#define ITERATIONS   6947
+#define MAC_KEY      "24437c1cbc0ceb94e5d5b1bdae2706f"
+#define SALT         "40fde96ec89576607327d51ef7fb81fa600593d15c1d6b9e525310e6"
 
-#define LOGIN_FILE     "~/pes/users/shadow"
-#define TMP_LOGIN_FILE "~/pes/users/newshadow"
+#define LOGIN_FILE     "shadow"
+#define TMP_LOGIN_FILE "newshadow"
 
 /* Authentication system status return */
-typedef enum authentication_system {
+typedef enum authentication_status {
 	AU_AUTHENTICATION_OK    = 0,
 	AU_AUTHENTICATION_ERROR = 1,
 	AU_SIGN_UP_OK           = 2,
@@ -34,15 +37,15 @@ typedef enum authentication_system {
 	AU_USER_EXIST           = 6,
 	AU_MAX_USERS_REACHED    = 7,
 	AU_ERROR                = 99
-} Authentication_status;
+} Au_status;
 
 /********************/
 /* EXTERN FUNCTIONS */
 /********************/
 
-Authentication_status signUp(const char *user, const char *password);
-Authentication_status login(const char *user, const char *password);
-Authentication_status removeUser(const char *user);
+Au_status signUp(const char *user, const char *password);
+Au_status login(const char *user, const char *password);
+Au_status removeUser(const char *user);
 
 #ifdef __cplusplus
 }
