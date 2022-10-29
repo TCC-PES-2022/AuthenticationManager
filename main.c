@@ -56,7 +56,7 @@ test(void)
 	/* -------------------- Inputs -------------------------- */
 
 	const char *user_valid[] = {"UmNovoUsuario", "UsuarioNovo",
-	"AnotherUser", "UserAnother", "OtherUser"}; 
+	"AnotherUser", "UserAnother", "OtherUser"};
 
 	const char *user_invalid[] = {"umnovousuario", "", "user", "OA", "alkjdfls"};
 
@@ -106,9 +106,9 @@ test(void)
 		assert(4 == removeUser(user_valid[i]));
 
 	/* -------------------- signUP same user -------------------- */
-	
+
 	assert(2 == signUp(user_valid[0], password_valid[0]));
-	assert(6 == signUp(user_valid[0], password_valid[0]));
+	assert(6 == signUp(user_valid[0], password_valid[1]));
 	assert(4 == removeUser(user_valid[0]));
 
 	puts("All tests passed!");

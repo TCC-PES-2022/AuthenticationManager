@@ -9,6 +9,7 @@ Au_status           login(const char *, const char *);
 Au_status           removeUser(const char *);
 static Au_status    saveNewUserAndPassword(const char *, const char *);
 static Au_status    checkLogin(const char *, const char *);
+static int          userExist(const char *);
 static void         touchFile(void);
 static void         substituteFile(void);
 static int          sanitizeUser(const char *);
@@ -34,7 +35,7 @@ signUp(const char *user, const char *password)
 	if (countMaxUsers() >= MAX_USERS)
 		return AU_MAX_USERS_REACHED;
 
-	if (checkLogin(user, password) == AU_AUTHENTICATION_OK)
+	if (userExist(user))
 		return AU_USER_EXIST;
 
 	/* save new user and password; final step */
@@ -156,6 +157,34 @@ checkLogin(const char *user, const char *password)
 	fclose(login_file);
 
 	return AU_AUTHENTICATION_ERROR;	
+}
+
+static int
+userExist(const char *user)
+{
+	int user_exist;
+	char buffer[BUFFER_SIZE];
+	char tmp_buffer[BUFFER_SIZE];
+	char *find_user;
+	FILE *login_file;
+
+	login_file = fopen(LOGIN_FILE, "r");
+
+	user_exist = 0;
+
+	/* Identify if user already exist */
+	while (fgets(buffer, BUFFER_SIZE, login_file)) {
+		strcpy(tmp_buffer, buffer);
+		find_user = strtok(tmp_buffer, ":");
+		if (strcmp(user, find_user))
+			continue;
+		else
+			user_exist = 1;
+	}
+
+	fclose(login_file);
+
+	return (user_exist) ? 1 : 0;
 }
 
 /************************** Create and substitute file ************************/
