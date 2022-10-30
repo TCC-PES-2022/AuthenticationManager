@@ -1,7 +1,7 @@
 BIN        = login
 CC         = cc
 AR         = ar
-CFLAGS     = -Wall -Wextra -O3 -march=native -fPIC
+CFLAGS     = -Wall -Wextra -fPIC
 COVFLAGS   = -fprofile-arcs -ftest-coverage -g
 LDFLAGS    = -lgcrypt -lgpg-error
 COVLDFLAGS = -lgcov --coverage
