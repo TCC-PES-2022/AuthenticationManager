@@ -35,7 +35,7 @@ ldcov: $(OBJ:=.o)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BIN): $(OBJ:=.o) $(MAIN:=.o) $(HEADER:=.h)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 # Generate dynamic library rule
 $(DLIB): $(OBJ:=.o)
